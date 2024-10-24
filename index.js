@@ -41,11 +41,6 @@ let contacts = [
         name: "Mary Poppendieck",
         number: "39-23-6423122",
     },
-    {
-        id: "5",
-        name: "EJ Andrea Canatoy",
-        number: "39-23-6423122",
-    },
 ];
 
 const generateId = () => {
