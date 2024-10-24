@@ -1,8 +1,11 @@
 const express = require("express");
 var morgan = require("morgan");
 var bodyParser = require("body-parser");
+var cors = require("cors");
 
 const app = express();
+
+app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(morgan("tiny"));
@@ -145,7 +148,7 @@ app.put("/api/persons/:id", (request, response) => {
     response.status(200).send(contacts);
 });
 
-const PORT = 3001;
+const PORT = 3002;
 app.listen(PORT, () => {
     console.log(`App is running in port ${PORT}`);
 });
