@@ -27,11 +27,12 @@ const findByName = async (name) => {
 
 app.get("/api/persons", (request, response, next) => {
     Contact.find({})
-        .then((contacts) =>
+        .then((contacts) => {
+            console.log(contacts, "CONTACTS FOUND");
             contacts.length > 0
                 ? response.status(200).send(contacts).end()
-                : response.status(400).end()
-        )
+                : response.status(404).send({ error: "No data found" });
+        })
         .catch((error) => {
             console.log(error);
             next(error);
@@ -56,8 +57,8 @@ app.get("/api/persons/:id", (request, response, next) => {
     Contact.findById(contactId)
         .then((result) =>
             result
-                ? response.status(200).send(result).end()
-                : response.status(404).end()
+                ? response.status(200).send(result)
+                : response.status(404).send({ error: "No data found" })
         )
         .catch((error) => next(error));
 });
@@ -67,7 +68,11 @@ app.delete("/api/persons/:id", (request, response, next) => {
 
     Contact.findByIdAndDelete(contactId)
         .then((result) => {
-            result ? response.status(204).end() : response.status(404).end();
+            result
+                ? response.status(204).end()
+                : response
+                      .status(404)
+                      .send({ error: "Data to delete not found." });
         })
         .catch((error) => next(error));
 });
@@ -75,21 +80,13 @@ app.delete("/api/persons/:id", (request, response, next) => {
 app.post("/api/persons", async (request, response, next) => {
     const newContact = request.body;
     const { name, number } = newContact;
+
     const duplicateItem = await findByName(name);
-
     if (duplicateItem.length > 0)
-        return response.status(409).json({
-            error: "The user already exists. Name must be unique.",
-            duplicateItem,
-        });
+        return response.status(409).send(duplicateItem).end();
 
-    Contact.create({
-        name: name,
-        number: number,
-    })
-        .then((result) => {
-            result ? response.status(201).end() : response.status(404).end();
-        })
+    Contact.create({ name: name, number: number })
+        .then((savedContact) => response.json(savedContact))
         .catch((error) => next(error));
 });
 
@@ -97,7 +94,11 @@ app.put("/api/persons/:id", (request, response, next) => {
     const contactId = request.params.id;
     const contactBody = request.body;
 
-    Contact.findByIdAndUpdate(contactId, { number: contactBody.number })
+    Contact.findByIdAndUpdate(
+        contactId,
+        { number: contactBody.number },
+        { runValidators: true }
+    )
         .then((result) =>
             result ? response.status(200).end() : response.status(404).end()
         )
@@ -105,11 +106,13 @@ app.put("/api/persons/:id", (request, response, next) => {
 });
 
 const errorHandler = (error, request, response, next) => {
+    console.log(error, "WHAT'S THE ERROR");
+
     if (error.name === "CastError") {
         return response.status(400).send({ error: "malformatted id" });
+    } else if (error.name === "ValidationError") {
+        return response.status(400).send({ error: error.message });
     }
-
-    next(error);
 };
 
 app.use(errorHandler);
