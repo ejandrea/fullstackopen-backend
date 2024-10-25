@@ -28,13 +28,11 @@ const findByName = async (name) => {
 app.get("/api/persons", (request, response, next) => {
     Contact.find({})
         .then((contacts) => {
-            console.log(contacts, "CONTACTS FOUND");
             contacts.length > 0
                 ? response.status(200).send(contacts).end()
                 : response.status(404).send({ error: "No data found" });
         })
         .catch((error) => {
-            console.log(error);
             next(error);
         });
 });
@@ -106,8 +104,6 @@ app.put("/api/persons/:id", (request, response, next) => {
 });
 
 const errorHandler = (error, request, response, next) => {
-    console.log(error, "WHAT'S THE ERROR");
-
     if (error.name === "CastError") {
         return response.status(400).send({ error: "malformatted id" });
     } else if (error.name === "ValidationError") {
